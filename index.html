@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control de Arbitraje - Muchxs Nenxs</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            background: #f8fafc;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            text-align: center;
+            border-left: 4px solid;
+        }
+        
+        .stat-card.money {
+            border-left-color: #10b981;
+        }
+        
+        .stat-card.debt {
+            border-left-color: #ef4444;
+        }
+        
+        .stat-card.games {
+            border-left-color: #3b82f6;
+        }
+        
+        .stat-card.avg {
+            border-left-color: #8b5cf6;
+        }
+        
+        .stat-value {
+            font-size: 2.2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #64748b;
+            font-size: 0.9em;
+        }
+        
+        .main-content {
+            padding: 30px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+        }
+        
+        .section-title {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            color: #1e293b;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 10px;
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+        
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 10px;
+            text-align: center;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        td {
+            padding: 12px 10px;
+            text-align: center;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .player-name {
+            font-weight: 600;
+            text-align: left !important;
+            background: #f8fafc;
+            position: sticky;
+            left: 0;
+            z-index: 5;
+        }
+        
+        .amount-cell {
+            font-weight: 500;
+        }
+        
+        .amount-cell.paid {
+            background: #dcfce7;
+            color: #166534;
+        }
+        
+        .amount-cell.pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .total-row {
+            background: #1e293b;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .debt-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-left: 8px;
+        }
+        
+        .debt-indicator.good {
+            background: #10b981;
+        }
+        
+        .debt-indicator.warning {
+            background: #f59e0b;
+        }
+        
+        .debt-indicator.danger {
+            background: #ef4444;
+        }
+        
+        .arbitrage-cost {
+            font-size: 1.1em;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            display: inline-block;
+        }
+        
+        .add-payment-btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        
+        .add-payment-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .export-btn {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin: 10px 5px;
+            transition: transform 0.2s;
+        }
+        
+        .export-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 10% auto;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 12px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1em;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: black;
+        }
+        
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            table {
+                font-size: 0.9em;
+            }
+            
+            th, td {
+                padding: 8px 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚽ Control de Arbitraje</h1>
+            <p>Equipo: Muchxs Nenxs</p>
+        </div>
+        
+        <div class="dashboard">
+            <div class="stat-card money">
+                <div class="stat-value" id="totalCollected">$1,201.50</div>
+                <div class="stat-label">Total Recaudado</div>
+            </div>
+            <div class="stat-card debt">
+                <div class="stat-value" id="totalSpent">$1,150.00</div>
+                <div class="stat-label">Total Gastado en Arbitrajes</div>
+            </div>
+            <div class="stat-card games">
+                <div class="stat-value" id="totalGames">15</div>
+                <div class="stat-label">Partidos Jugados</div>
+            </div>
+            <div class="stat-card avg">
+                <div class="stat-value" id="avgPerGame">$76.67</div>
+                <div class="stat-label">Promedio por Partido</div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="section">
+                <h2 class="section-title">🎯 Resumen Ejecutivo</h2>
+                <div style="background: #f1f5f9; padding: 20px; border-radius: 10px; border-left: 4px solid #10b981;">
+                    <p><strong>Balance actual:</strong> <span id="currentBalance" style="color: #059669; font-size: 1.2em;">$51.50</span></p>
+                    <p style="margin-top: 10px;"><strong>Estado:</strong> <span id="teamStatus">✅ Equipo con fondos positivos</span></p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2 class="section-title">👥 Contribuciones por Jugador</h2>
+                <div class="table-container">
+                    <table id="playerTable">
+                        <thead>
+                            <tr>
+                                <th style="text-align: left;">Jugador</th>
+                                <th>Total Aportado</th>
+                                <th>Promedio por Partido</th>
+                                <th>Estado</th>
+                                <th>Último Pago</th>
+                            </tr>
+                        </thead>
+                        <tbody id="playerTableBody">
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2 class="section-title">📅 Historial de Arbitrajes</h2>
+                <div class="table-container">
+                    <table id="arbitrageTable">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Costo</th>
+                                <th>Estado</th>
+                                <th>Notas</th>
+                            </tr>
+                        </thead>
+                        <tbody id="arbitrageTableBody">
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2 class="section-title">💰 Contribuciones Detalladas</h2>
+                <div class="table-container">
+                    <table id="detailTable">
+                        <thead>
+                            <tr>
+                                <th>Jugador</th>
+                                <th>22/Ene</th>
+                                <th>29/Ene</th>
+                                <th>5/Feb</th>
+                                <th>12/Feb</th>
+                                <th>19/Feb</th>
+                                <th>26/Feb</th>
+                                <th>5/Mar</th>
+                                <th>12/Mar</th>
+                                <th>7/May</th>
+                                <th>14/May</th>
+                                <th>21/May</th>
+                                <th>28/May</th>
+                                <th>4/Jun</th>
+                                <th>11/Jun</th>
+                                <th>18/Jun</th>
+                                <th>Total</th>
+                            </tr>
+                        </thead>
+                        <tbody id="detailTableBody">
+                            <!-- Se llenará dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="add-payment-btn" onclick="showAddPaymentModal()">+ Agregar Pago</button>
+                <button class="export-btn" onclick="exportToExcel()">📊 Exportar a Excel</button>
+                <button class="export-btn" onclick="addNewGame()">⚽ Nuevo Partido</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para agregar pagos -->
+    <div id="paymentModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 style="margin-bottom: 20px;">💰 Agregar Pago</h2>
+            
+            <div class="form-group">
+                <label for="playerSelect">Jugador:</label>
+                <select id="playerSelect">
+                    <option value="">Seleccionar jugador...</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="amountInput">Cantidad ($):</label>
+                <input type="number" id="amountInput" step="0.5" min="0" placeholder="0.00">
+            </div>
+            
+            <div class="form-group">
+                <label for="gameSelect">Partido:</label>
+                <select id="gameSelect">
+                    <option value="">Seleccionar partido...</option>
+                </select>
+            </div>
+            
+            <div style="text-align: center; margin-top: 25px;">
+                <button class="add-payment-btn" onclick="addPayment()">Confirmar Pago</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Datos iniciales basados en tu Excel
+        let players = [
+            {name: 'Julio', payments: [20, 10, 5, 40, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 75},
+            {name: 'Steph', payments: [10, 20, 100, 10, 25, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 165},
+            {name: 'Edna', payments: [50, 20, 20, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 140},
+            {name: 'Marco', payments: [7, 20, 30, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 77},
+            {name: 'Juan', payments: [50, 8.5, 10, 2, 35, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 105.5},
+            {name: 'Pastrana', payments: [35, 20, 55, 20, 20, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 155},
+            {name: 'Clau', payments: [25, 55, 20, 50, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 150},
+            {name: 'Elvia', payments: [30, 10, 35, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 75},
+            {name: 'Brandon', payments: [70, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 70},
+            {name: 'Yitzel', payments: [75, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 75},
+            {name: 'Joshua', payments: [19, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 39},
+            {name: 'Magali', payments: [75, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], total: 75}
+        ];
+        
+        let games = [
+            {date: '22/Ene/25', cost: 75, status: 'Pagado'},
+            {date: '29/Ene/25', cost: 75, status: 'Pagado'},
+            {date: '5/Feb/25', cost: 75, status: 'Pagado'},
+            {date: '12/Feb/25', cost: 75, status: 'Pagado'},
+            {date: '19/Feb/25', cost: 75, status: 'Pagado'},
+            {date: '26/Feb/25', cost: 75, status: 'Pagado'},
+            {date: '5/Mar/25', cost: 75, status: 'Pagado'},
+            {date: '12/Mar/25', cost: 100, status: 'Pagado'},
+            {date: '7/May/25', cost: 75, status: 'Pagado'},
+            {date: '14/May/25', cost: 75, status: 'Pagado'},
+            {date: '21/May/25', cost: 75, status: 'Pagado'},
+            {date: '28/May/25', cost: 75, status: 'Pagado'},
+            {date: '4/Jun/25', cost: 75, status: 'Pagado'},
+            {date: '11/Jun/25', cost: 75, status: 'Pagado'},
+            {date: '18/Jun/25', cost: 75, status: 'Pagado'}
+        ];
+        
+        function calculateStats() {
+            const totalCollected = players.reduce((sum, player) => sum + player.total, 0);
+            const totalSpent = games.reduce((sum, game) => sum + game.cost, 0);
+            const currentBalance = totalCollected - totalSpent;
+            const avgPerGame = totalSpent / games.length;
+            
+            document.getElementById('totalCollected').textContent = `$${totalCollected.toFixed(2)}`;
+            document.getElementById('totalSpent').textContent = `$${totalSpent.toFixed(2)}`;
+            document.getElementById('totalGames').textContent = games.length;
+            document.getElementById('avgPerGame').textContent = `$${avgPerGame.toFixed(2)}`;
+            document.getElementById('currentBalance').textContent = `$${currentBalance.toFixed(2)}`;
+            
+            const statusElement = document.getElementById('teamStatus');
+            if (currentBalance > 100) {
+                statusElement.innerHTML = '✅ Equipo con fondos suficientes';
+                statusElement.style.color = '#059669';
+            } else if (currentBalance > 0) {
+                statusElement.innerHTML = '⚠️ Fondos bajos, considerar recolecta';
+                statusElement.style.color = '#d97706';
+            } else {
+                statusElement.innerHTML = '❌ Fondos insuficientes, recolecta urgente';
+                statusElement.style.color = '#dc2626';
+            }
+        }
+        
+        function getDebtStatus(total, avg) {
+            if (total >= avg * 1.2) return 'good';
+            if (total >= avg * 0.8) return 'warning';
+            return 'danger';
+        }
+        
+        function renderPlayerTable() {
+            const tbody = document.getElementById('playerTableBody');
+            const avgTotal = players.reduce((sum, p) => sum + p.total, 0) / players.length;
+            
+            tbody.innerHTML = players.map(player => {
+                const avgPerGame = player.total / games.length;
+                const debtStatus = getDebtStatus(player.total, avgTotal);
+                const lastPaymentIndex = player.payments.findLastIndex(p => p > 0);
+                const lastPaymentDate = lastPaymentIndex >= 0 ? games[lastPaymentIndex]?.date || 'N/A' : 'Sin pagos';
+                
+                return `
+                    <tr>
+                        <td class="player-name">
+                            ${player.name}
+                            <span class="debt-indicator ${debtStatus}"></span>
+                        </td>
+                        <td class="amount-cell">$${player.total.toFixed(2)}</td>
+                        <td class="amount-cell">$${avgPerGame.toFixed(2)}</td>
+                        <td style="color: ${debtStatus === 'good' ? '#059669' : debtStatus === 'warning' ? '#d97706' : '#dc2626'}">
+                            ${debtStatus === 'good' ? 'Al corriente' : debtStatus === 'warning' ? 'Atrasado' : 'Muy atrasado'}
+                        </td>
+                        <td>${lastPaymentDate}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function renderArbitrageTable() {
+            const tbody = document.getElementById('arbitrageTableBody');
+            
+            tbody.innerHTML = games.map((game, index) => `
+                <tr>
+                    <td>${game.date}</td>
+                    <td style="font-weight: bold;">$${game.cost.toFixed(2)}</td>
+                    <td style="color: #059669;">✓ ${game.status}</td>
+                    <td>Partido #${index + 1}</td>
+                </tr>
+            `).join('');
+        }
+        
+        function renderDetailTable() {
+            const tbody = document.getElementById('detailTableBody');
+            
+            tbody.innerHTML = players.map(player => `
+                <tr>
+                    <td class="player-name">${player.name}</td>
+                    ${player.payments.map(payment => 
+                        `<td class="amount-cell ${payment > 0 ? 'paid' : 'pending'}">
+                            ${payment > 0 ? `$${payment}` : '-'}
+                        </td>`
+                    ).join('')}
+                    <td style="background: #1e293b; color: white; font-weight: bold;">$${player.total.toFixed(2)}</td>
+                </tr>
+            `).join('') + `
+                <tr class="total-row">
+                    <td>TOTAL</td>
+                    ${games.map((game, index) => {
+                        const totalForGame = players.reduce((sum, player) => sum + (player.payments[index] || 0), 0);
+                        return `<td>$${totalForGame.toFixed(2)}</td>`;
+                    }).join('')}
+                    <td>$${players.reduce((sum, player) => sum + player.total, 0).toFixed(2)}</td>
+                </tr>
+                <tr style="background: #3b82f6; color: white;">
+                    <td><strong>COSTO ARBITRAJE</strong></td>
+                    ${games.map(game => `<td><strong>$${game.cost}</strong></td>`).join('')}
+                    <td><strong>${games.reduce((sum, game) => sum + game.cost, 0).toFixed(2)}</strong></td>
+                </tr>
+            `;
+        }
+        
+        function showAddPaymentModal() {
+            const modal = document.getElementById('paymentModal');
+            const playerSelect = document.getElementById('playerSelect');
+            const gameSelect = document.getElementById('gameSelect');
+            
+            // Llenar select de jugadores
+            playerSelect.innerHTML = '<option value="">Seleccionar jugador...</option>' +
+                players.map((player, index) => `<option value="${index}">${player.name}</option>`).join('');
+            
+            // Llenar select de partidos
+            gameSelect.innerHTML = '<option value="">Seleccionar partido...</option>' +
+                games.map((game, index) => `<option value="${index}">${game.date} - ${game.cost}</option>`).join('');
+            
+            modal.style.display = 'block';
+        }
+        
+        function closeModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+            document.getElementById('playerSelect').value = '';
+            document.getElementById('amountInput').value = '';
+            document.getElementById('gameSelect').value = '';
+        }
+        
+        function addPayment() {
+            const playerIndex = parseInt(document.getElementById('playerSelect').value);
+            const amount = parseFloat(document.getElementById('amountInput').value);
+            const gameIndex = parseInt(document.getElementById('gameSelect').value);
+            
+            if (isNaN(playerIndex) || isNaN(amount) || isNaN(gameIndex) || amount <= 0) {
+                alert('Por favor completa todos los campos correctamente.');
+                return;
+            }
+            
+            // Actualizar el pago del jugador
+            players[playerIndex].payments[gameIndex] += amount;
+            players[playerIndex].total += amount;
+            
+            // Actualizar las tablas
+            renderPlayerTable();
+            renderDetailTable();
+            calculateStats();
+            
+            // Cerrar modal
+            closeModal();
+            
+            alert(`✅ Pago de ${amount} agregado para ${players[playerIndex].name}`);
+        }
+        
+        function addNewGame() {
+            const date = prompt('Fecha del nuevo partido (ej: 25/Jun/25):');
+            const cost = parseFloat(prompt('Costo del arbitraje:'));
+            
+            if (!date || isNaN(cost) || cost <= 0) {
+                alert('Por favor ingresa una fecha y costo válidos.');
+                return;
+            }
+            
+            // Agregar nuevo partido
+            games.push({
+                date: date,
+                cost: cost,
+                status: 'Pendiente'
+            });
+            
+            // Agregar nueva columna de pagos para todos los jugadores
+            players.forEach(player => {
+                player.payments.push(0);
+            });
+            
+            // Actualizar tabla de detalles con nueva columna
+            updateDetailTableHeaders();
+            renderDetailTable();
+            renderArbitrageTable();
+            calculateStats();
+            
+            alert(`✅ Nuevo partido agregado: ${date} - ${cost}`);
+        }
+        
+        function updateDetailTableHeaders() {
+            const headerRow = document.querySelector('#detailTable thead tr');
+            const lastTh = headerRow.querySelector('th:last-child');
+            
+            // Remover el header "Total" temporalmente
+            lastTh.remove();
+            
+            // Agregar header para el nuevo partido
+            const lastGame = games[games.length - 1];
+            const newTh = document.createElement('th');
+            newTh.textContent = lastGame.date.split('/').slice(0, 2).join('/');
+            headerRow.appendChild(newTh);
+            
+            // Volver a agregar el header "Total"
+            const totalTh = document.createElement('th');
+            totalTh.textContent = 'Total';
+            headerRow.appendChild(totalTh);
+        }
+        
+        function exportToExcel() {
+            // Crear datos para exportar
+            const exportData = [
+                ['Control de Arbitraje - Muchxs Nenxs'],
+                [''],
+                ['Resumen:'],
+                ['Total Recaudado', `${players.reduce((sum, p) => sum + p.total, 0).toFixed(2)}`],
+                ['Total Gastado', `${games.reduce((sum, g) => sum + g.cost, 0).toFixed(2)}`],
+                ['Balance Actual', `${(players.reduce((sum, p) => sum + p.total, 0) - games.reduce((sum, g) => sum + g.cost, 0)).toFixed(2)}`],
+                [''],
+                ['Detalle por Jugador:'],
+                ['Jugador', ...games.map(g => g.date), 'Total']
+            ];
+            
+            // Agregar datos de jugadores
+            players.forEach(player => {
+                exportData.push([
+                    player.name,
+                    ...player.payments.map(p => p > 0 ? p : ''),
+                    player.total
+                ]);
+            });
+            
+            // Convertir a CSV
+            const csvContent = exportData.map(row => 
+                row.map(cell => `"${cell}"`).join(',')
+            ).join('\n');
+            
+            // Descargar archivo
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', `arbitraje_${new Date().getFullYear()}_${new Date().getMonth() + 1}.csv`);
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            alert('📊 Archivo exportado exitosamente');
+        }
+        
+        // Cerrar modal al hacer clic fuera de él
+        window.onclick = function(event) {
+            const modal = document.getElementById('paymentModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+        
+        // Inicializar la aplicación
+        document.addEventListener('DOMContentLoaded', function() {
+            calculateStats();
+            renderPlayerTable();
+            renderArbitrageTable();
+            renderDetailTable();
+        });
+    </script>
+</body>
+</html>
